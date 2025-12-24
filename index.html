@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório Avarias</title>
+    <style>
+        :root {
+            --vermelho-auri: #cc0000;
+            --azul-botao: #1976d2;
+            --cinza-fundo: #f2f2f2;
+            --cinza-borda: #888888;
+        }
+
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #525659; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 210mm; background: white; padding: 8mm; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        .header-relatorio { display: flex; align-items: center; border-bottom: 2px solid var(--vermelho-auri); padding-bottom: 8px; margin-bottom: 12px; position: relative; }
+        .logo { width: 110px; height: 55px; object-fit: contain; margin-right: 20px; }
+        
+        .titulos-header { display: flex; flex-direction: column; flex-grow: 1; text-align: center; }
+        h2 { color: var(--vermelho-auri); text-transform: uppercase; font-size: 18px; margin: 0; }
+        
+        /* ALTERAÇÃO AQUI: Subtítulo em escrita normal */
+        .subtitulo-relatorio { 
+            font-size: 13px; 
+            color: #444; 
+            font-weight: bold; 
+            text-transform: none; /* Remove o caixa alta */
+            margin-top: 2px; 
+        }
+        
+        .btn-imprimir-topo { position: absolute; right: 0; top: 0; background: #444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; }
+
+        .filtros { background: #fafafa; padding: 10px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+        .item-filtro { display: flex; flex-direction: column; flex-grow: 1; }
+        .item-filtro label { font-size: 10px; font-weight: bold; color: var(--vermelho-auri); margin-bottom: 2px; }
+        .item-filtro input { padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 11px; outline: none; }
+
+        .acoes-filtros { display: flex; gap: 10px; width: 100%; margin-top: 5px; }
+        .btn-acao { flex: 1; padding: 8px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase; color: white; }
+        .btn-atualizar { background: var(--azul-botao); }
+        .btn-limpar { background: #777; }
+
+        .card-cnpj { background: #fff; border: 1.5px solid var(--cinza-borda); border-radius: 4px; margin-bottom: 15px; overflow: hidden; page-break-inside: avoid; }
+        .card-header-cnpj { 
+            background: #fff; 
+            color: var(--vermelho-auri); 
+            padding: 8px 12px; 
+            display: flex; 
+            justify-content: space-between; 
+            font-weight: normal; 
+            font-size: 13px;
+            border-bottom: 1.5px solid var(--cinza-borda);
+            text-transform: uppercase;
+        }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 9px; } 
+        th { background: #f2f2f2; color: #000; padding: 4px 2px; border: 1px solid var(--cinza-borda); text-transform: uppercase; font-size: 8.5px; }
+        td { border: 1px solid #d0d0d0; padding: 3px 2px; text-align: center; line-height: 1.2; }
+
+        .col-data { width: 10%; }
+        .col-cod  { width: 15%; }
+        .col-desc { width: 28%; }
+        .col-qtd  { width: 6%; }
+        .col-mot  { width: 17%; } 
+        .col-uni  { width: 12%; }
+        .col-tot  { width: 12%; }
+
+        .total-cnpj { text-align: right; padding: 6px 12px; font-weight: bold; font-size: 12px; color: var(--vermelho-auri); background: #fff; border-top: 1.5px solid var(--vermelho-auri); }
+
+        #assinatura-final { display: none; justify-content: space-between; font-size: 9px; color: #333; margin-top: 15px; padding-top: 5px; border-top: 1px solid #000; width: 100%; }
+
+        @media print {
+            @page { size: portrait; margin: 10mm; }
+            .no-print, .filtros, .btn-imprimir-topo { display: none !important; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; border: none; width: 100%; padding: 0; }
+            .card-cnpj { border-color: #000; }
+            .card-header-cnpj { color: #cc0000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            #assinatura-final { display: flex !important; }
+        }
+    </style>
+</head>
+<body onload="carregarDados()">
+
+<div class="container">
+    <div class="header-relatorio">
+        <img src="logo.png" alt="AURI" class="logo">
+        <div class="titulos-header">
+            <h2>AURI AUTOPEÇAS LTDA</h2>
+            <span class="subtitulo-relatorio">Relatório de avarias por lojas</span>
+        </div>
+        <button class="btn-imprimir-topo no-print" onclick="window.print()">🖨️ IMPRIMIR</button>
+    </div>
+    
+    <div class="filtros no-print">
+        <div class="item-filtro"><label>DATA INICIAL</label><input type="date" id="fDe"></div>
+        <div class="item-filtro"><label>DATA FINAL</label><input type="date" id="fAte"></div>
+        <div class="item-filtro"><label>CNPJ</label><input type="text" id="fCnpj" placeholder="00.000.000/0000-00" oninput="lidarCNPJ(this)"></div>
+        <div class="item-filtro"><label>MARCA</label><input type="text" id="fMarca" placeholder="Ex: NGK"></div>
+        
+        <div class="acoes-filtros">
+            <button class="btn-acao btn-atualizar" onclick="processarFiltros()">🔄 FILTRAR AGORA</button>
+            <button class="btn-acao btn-limpar" onclick="limparFiltros()">🧹 LIMPAR FILTROS</button>
+        </div>
+    </div>
+
+    <div id="resultado"></div>
+    
+    <div id="assinatura-final">
+        <span style="font-weight: bold;">Marconde Silva - AURI AUTOPEÇAS</span>
+        <span id="data-hora-print"></span>
+    </div>
+</div>
+
+<script>
+    const ENDPOINT = "https://script.google.com/macros/s/AKfycbxMPqbsZ-BytbOozoqmTPtWvRELJeg4XDdczTm8FGv-Jtlz2_ZGoT9-iaLnQfcdJ6lk/exec";
+    let DADOS_BRUTOS = [];
+
+    function lidarCNPJ(i) {
+        let v = i.value.replace(/\D/g, "");
+        v = v.replace(/^(\d{2})(\d)/, "$1.$2");
+        v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+        v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
+        v = v.replace(/(\d{4})(\d)/, "$1-$2");
+        i.value = v;
+    }
+
+    function limparFiltros() {
+        document.getElementById("fDe").value = "";
+        document.getElementById("fAte").value = "";
+        document.getElementById("fCnpj").value = "";
+        document.getElementById("fMarca").value = "";
+        processarFiltros();
+    }
+
+    async function carregarDados() {
+        const resDiv = document.getElementById("resultado");
+        resDiv.innerHTML = "<p style='text-align:center; font-size:12px;'>Sincronizando banco AURI...</p>";
+        
+        try {
+            const response = await fetch(`${ENDPOINT}?acao=buscarRelatorio&filtros=${encodeURIComponent(JSON.stringify({}))}`);
+            DADOS_BRUTOS = await response.json();
+            processarFiltros();
+        } catch (e) {
+            resDiv.innerHTML = "<p style='color:red;'>Erro de conexão.</p>";
+        }
+    }
+
+    function processarFiltros() {
+        const fDe = document.getElementById("fDe").value;
+        const fAte = document.getElementById("fAte").value;
+        const fCnpj = document.getElementById("fCnpj").value;
+        const fMarca = document.getElementById("fMarca").value.toUpperCase();
+
+        const dadosFiltrados = DADOS_BRUTOS.filter(item => {
+            const dataItemFull = new Date(item[2]);
+            const dataItemSimples = dataItemFull.toISOString().split('T')[0];
+
+            const matchDataDe = !fDe || (dataItemSimples >= fDe);
+            const matchDataAte = !fAte || (dataItemSimples <= fAte);
+            const matchCnpj = !fCnpj || (item[1] && item[1].includes(fCnpj));
+            const matchMarca = !fMarca || (item[12] && item[12].toUpperCase().includes(fMarca));
+
+            return matchDataDe && matchDataAte && matchCnpj && matchMarca;
+        });
+
+        exibirRelatorio(dadosFiltrados);
+    }
+
+    function exibirRelatorio(dados) {
+        const resDiv = document.getElementById("resultado");
+        if (dados.length === 0) {
+            resDiv.innerHTML = "<p style='text-align:center; font-size:12px;'>Nenhum registro para esta busca.</p>";
+            return;
+        }
+
+        resDiv.innerHTML = "";
+        const agora = new Date();
+        document.getElementById("data-hora-print").innerText = `Gerado em: ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR')}`;
+        document.getElementById("assinatura-final").style.display = "flex";
+
+        const grupos = {};
+        dados.forEach(linha => {
+            const cnpj = linha[1] || "NÃO INFORMADO";
+            if (!grupos[cnpj]) grupos[cnpj] = [];
+            grupos[cnpj].push(linha);
+        });
+
+        for (const cnpj in grupos) {
+            const itens = grupos[cnpj];
+            let totalLoja = 0;
+
+            let html = `<div class="card-cnpj">
+                <div class="card-header-cnpj"><span>LOJA / CNPJ: ${cnpj}</span><span>ÍTENS: ${itens.length}</span></div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="col-data">DATA</th>
+                            <th class="col-cod">CÓD. PEÇA</th>
+                            <th class="col-desc">MARCA / DESCRIÇÃO</th>
+                            <th class="col-qtd">QTD</th>
+                            <th class="col-mot">MOTIVO</th>
+                            <th class="col-uni">UNIT.</th>
+                            <th class="col-tot">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            
+            itens.forEach(it => {
+                const d = new Date(it[2]);
+                const dataF = `${String(d.getUTCDate()).padStart(2,'0')}/${String(d.getUTCMonth()+1).padStart(2,'0')}/${d.getUTCFullYear()}`;
+                const vTotal = parseFloat(it[8]) || 0;
+                totalLoja += vTotal;
+
+                html += `<tr>
+                    <td>${dataF}</td>
+                    <td style="font-weight:bold;">${it[3]}</td> 
+                    <td style="text-align:left; padding-left:4px;"><b>${it[12]}</b> - ${it[4]}</td>
+                    <td>${it[5]}</td>
+                    <td style="text-align:left; padding-left:4px;">${it[6]}</td>
+                    <td>${(parseFloat(it[7]) || 0).toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+                    <td>${vTotal.toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>
+                <div class="total-cnpj">TOTAL ACUMULADO DA LOJA: R$ ${totalLoja.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div>
+            </div>`;
+            resDiv.innerHTML += html;
+        }
+    }
+</script>
+</body>
+</html>
