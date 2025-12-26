@@ -11,7 +11,7 @@
             --cinza-borda: #888888;
         }
 
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #525659; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #2B2F32; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 210mm; background: white; padding: 8mm; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
         .header-relatorio { display: flex; align-items: center; border-bottom: 2px solid var(--vermelho-auri); padding-bottom: 8px; margin-bottom: 12px; position: relative; }
@@ -20,12 +20,11 @@
         .titulos-header { display: flex; flex-direction: column; flex-grow: 1; text-align: center; }
         h2 { color: var(--vermelho-auri); text-transform: uppercase; font-size: 18px; margin: 0; }
         
-        /* ALTERAÇÃO AQUI: Subtítulo em escrita normal */
         .subtitulo-relatorio { 
-            font-size: 13px; 
-            color: #444; 
+            font-size: 16px; 
+            color: #000; 
             font-weight: bold; 
-            text-transform: none; /* Remove o caixa alta */
+            text-transform: none; 
             margin-top: 2px; 
         }
         
@@ -48,15 +47,16 @@
             padding: 8px 12px; 
             display: flex; 
             justify-content: space-between; 
-            font-weight: normal; 
+            font-weight: bold; 
             font-size: 13px;
             border-bottom: 1.5px solid var(--cinza-borda);
             text-transform: uppercase;
         }
         
-        table { width: 100%; border-collapse: collapse; font-size: 9px; } 
+        /* FONTES PRETAS NA TABELA */
+        table { width: 100%; border-collapse: collapse; font-size: 9px; color: #000; } 
         th { background: #f2f2f2; color: #000; padding: 4px 2px; border: 1px solid var(--cinza-borda); text-transform: uppercase; font-size: 8.5px; }
-        td { border: 1px solid #d0d0d0; padding: 3px 2px; text-align: center; line-height: 1.2; }
+        td { border: 1px solid #d0d0d0; padding: 3px 2px; text-align: center; line-height: 1.2; color: #000; }
 
         .col-data { width: 10%; }
         .col-cod  { width: 15%; }
@@ -68,7 +68,8 @@
 
         .total-cnpj { text-align: right; padding: 6px 12px; font-weight: bold; font-size: 12px; color: var(--vermelho-auri); background: #fff; border-top: 1.5px solid var(--vermelho-auri); }
 
-        #assinatura-final { display: none; justify-content: space-between; font-size: 9px; color: #333; margin-top: 15px; padding-top: 5px; border-top: 1px solid #000; width: 100%; }
+        /* ASSINATURA COM CONTRASTE MÁXIMO */
+        #assinatura-final { display: none; justify-content: space-between; font-size: 10px; color: #000; margin-top: 20px; padding-top: 8px; border-top: 1.5px solid #000; width: 100%; }
 
         @media print {
             @page { size: portrait; margin: 10mm; }
@@ -108,8 +109,8 @@
     <div id="resultado"></div>
     
     <div id="assinatura-final">
-        <span style="font-weight: bold;">Marconde Silva - AURI AUTOPEÇAS</span>
-        <span id="data-hora-print"></span>
+        <span style="font-weight: text-transform:">Marconde Silva - AURI AUTOPEÇAS</span>
+        <span id="data-hora-print" style="font-weight:"></span>
     </div>
 </div>
 
@@ -136,7 +137,7 @@
 
     async function carregarDados() {
         const resDiv = document.getElementById("resultado");
-        resDiv.innerHTML = "<p style='text-align:center; font-size:12px;'>Sincronizando banco AURI...</p>";
+        resDiv.innerHTML = "<p style='text-align:center; font-size:12px; color:#fff;'>Sincronizando banco AURI...</p>";
         
         try {
             const response = await fetch(`${ENDPOINT}?acao=buscarRelatorio&filtros=${encodeURIComponent(JSON.stringify({}))}`);
